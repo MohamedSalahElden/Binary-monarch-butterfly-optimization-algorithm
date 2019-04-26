@@ -8,7 +8,7 @@ import random
 
 
 
-Maxgen      = 4
+Maxgen      = 50
 Smax        = 1
 t           = 1
 P           = 5/12
@@ -18,8 +18,8 @@ NP          = 10
 NP1         = 4
 NP2         = 6
 peri        = 1.2
-c           = 20
-no_of_items = 4
+c           = 1000
+no_of_items = 100
 
 def calculate_value_and_weight(x , v , w):
 	d = int((x.shape[1]-2) /2)
@@ -80,9 +80,11 @@ def migration_operator(subpop1 , subpop2 , peri , p , v , w):				#return subpop1
 				subpop1[i,j] =  subpop2[r2,j]
 	subpop1 = update_array(subpop1 , v, w)
 	return subpop1
+
 def update_array(x , v ,w):
-	Real2Binary(x)
-	calculate_value_and_weight(x, v, w)
+	x = Real2Binary(x)
+	x = calculate_value_and_weight(x, v, w)
+	return x
 def butterfly_adjusting_operator(subpopulation2 , Xbest , Maxgen , Smax , t , p , BAR , v , w) :		#return subpopulation2 
 	NP2 = subpopulation2.shape[0]
 	d   = int((subpopulation2.shape[1] - 2) / 2)
@@ -108,71 +110,98 @@ def Greedy_Optimization_Algorithm(X , W , V , H , C):     			#return X , value ,
 	#step 1 : repair
 	
 	n = H.shape[0]	 # H array is the arranged items indices by their capacity 
-	print(n)
-	d = int((X.shape[1]-2)/2)
+	d = int((X.shape[0] -2)/2)
 	weight = 0 
 	value = 0
 	temp = 0
 
 	#calculate the waight 
-	for i in range(n):
+	for i in range(d):
 		weight = weight + X[i+d] * W[i]
 	
 
 	if (weight>C):										#check if wight exceed the knap sack capacity 
-		for i in range(n):								#for every item in the search area 
+		for i in range(d):								#for every item in the search area 
 			temp = temp + X[H[i]+d] * W[H[i]]				#take the next highest dencity item in H array 
 														#add it to the temp weight variable
 			if (temp > C):								#if the selected item exceed that weight 
 				temp = temp - X[H[i]+d] * W[H[i]]			#leave that weight again 
 				X[H[i]+d] = 0								#put 0 in the binary X matrix at its the position
+				X[H[i]] = -3		#update the real values 
 		weight = temp 									#current weight of the knapsack 
 	
 	#step 2 : optimize
 
-	for i in range(n):									#for all elements in X[H]
-		if (X[H[i]+d] == 0) and ((weight + W[H[i]+d]) <= C):	#
-			X[H[i]+d] = 1 
+	for i in range(d):									#for all elements in X[H]
+		if (X[H[i]+d] == 0) and ((weight + W[H[i]]) <= C):	#
+			X[H[i]+d] = 1 		#update the binary values 
+			X[H[i]] = 0			#update the real values 
 			weight = weight + X[H[i]+d] * W[H[i]]	
 	#step 3 : compute
 
-	for i in range(n):
+	for i in range(d):
 		value = value + X[i+d] * V[i]
 	
 
 	# result = np.append(X, [value , weight])
 		
-	return x 	
+	return X	
 
 
 v , w   = load_data_set(no_of_items)
 H = arrange_by_density(w, v)
-gen = generate_random_population(1 , v, w )
-print(gen)
-Greedy_Optimization_Algorithm(gen , w , v , H , c)
-print(gen)
+gen = generate_random_population(100 , v, w )
+# print(gen[:,4:])
+# for i in range(gen.shape[0]):
+# 	gen[i] = Greedy_Optimization_Algorithm(gen[i] , w , v , H , c)
+# print("---------------------------------------------------------")
+# update_array(gen , v ,w)
 
-gen = sort_by_fitness(gen)
-subpop_1 = gen[:3,:]
-subpop_2 = gen[3:6,:]
-print(subpop_1[:,4:])
-print("#############################################")
-print(subpop_2[:,4:])
-print("#############################################")
-subpop1 = migration_operator(subpop_1, subpop_2, peri, p , v , w)
-subpop_2 = butterfly_adjusting_operator(subpop_2, gen[0,:], Maxgen, Smax, t, p, BAR , v , w)
-print(subpop_1[:,4:])
-print("#############################################")
-print(subpop_2[:,4:])
-d=4
-sub_pop_bin = subpop_1[:,d:2*d]
+# print(gen[:,4:])
+# gen = sort_by_fitness(gen)
+# subpop_1 = gen[:3,:]
+# subpop_2 = gen[3:6,:]
+# print(subpop_1[:,4:])
+# print("#############################################")
+# print(subpop_2[:,4:])
+# print("#############################################")
+# subpop_1 = migration_operator(subpop_1, subpop_2, peri, p , v , w)
+# subpop_2 = butterfly_adjusting_operator(subpop_2, gen[0,:], Maxgen, Smax, t, p, BAR , v , w)
+# print(subpop_1[:,4:])
+# # print("#############################################")
+# print(subpop_2[:,4:])
+# d=4
+# sub_pop_bin = subpop_1[:,d:2*d]
 
+# 1 load data set and construct population
+v , w   = load_data_set(no_of_items)
+H = arrange_by_density(w, v)
+gen = generate_random_population(10 , v, w )
+# print(gen)
 
-# print(sub_pop_bin) 
+sol = np.empty(Maxgen)
 
+# 2 start algorithm
+while t <= Maxgen:
+	gen = sort_by_fitness(gen)
 
+	subpop_1 = gen[:NP1,:]
+	subpop_2 = gen[NP1:,:]
 
+	best = gen[0,:]
 
-# print(H)
-
-# print(Greedy_Optimization_Algorithm(sub_pop_bin , w , v , H , c))
+	subpop_1 = migration_operator(subpop_1, subpop_2, peri, p , v , w)
+	subpop_2 = butterfly_adjusting_operator(subpop_2, best, Maxgen, Smax, t, p, BAR , v , w)
+	gen = np.concatenate((subpop_1, subpop_2))
+	for i in range(gen.shape[0]):
+		gen[i] = Greedy_Optimization_Algorithm(gen[i] , w , v , H , c)
+	update_array(gen , v ,w)
+	gen = sort_by_fitness(gen)
+	best_solution = gen[0]
+	sol[t-1] = best_solution[no_of_items*2]
+	print(best_solution[no_of_items*2:])
+	t = t+1
+	pass
+print(sol)
+plt.plot(sol)
+plt.show()

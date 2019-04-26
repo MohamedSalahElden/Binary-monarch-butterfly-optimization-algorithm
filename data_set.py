@@ -5,8 +5,8 @@ import numpy as np
 def load_data_set(num):
 	allNums = []
 	#D:\desktop 6\SALAH\MSc\algorithms-2\proj\instances_01_KP\low-dimensional
-	#file_name = "instances_01_KP\large_scale\knapPI_1_" + str(num) + "_1000_1"
-	file_name = "instances_01_KP\\low-dimensional\\f4_l-d_kp_4_11"
+	file_name = "instances_01_KP\large_scale\knapPI_1_" + str(num) + "_1000_1"
+	# file_name = "instances_01_KP\\low-dimensional\\f4_l-d_kp_4_11"
 	# num_of_elements =int ( file_name.split("_")[5])
 	f = open(file_name, "r+")
 
